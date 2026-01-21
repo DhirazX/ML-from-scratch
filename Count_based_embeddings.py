@@ -1,4 +1,7 @@
 import numpy as np
+import re
+import numpy as np
+from sklearn.datasets import fetch_20newsgroups
 
 # example sentence
 sentences = [
@@ -12,10 +15,46 @@ sentences = [
     'the log is hard and rough'
 ]
 
+
+data = fetch_20newsgroups()
+
+print("Number of documents:", len(data.data))
+# print("Categories:", data.target_names)
+# print("\nFirst document preview:")
+# print(data.data[0:100])
+
+
+# Function to clean the dataset
+def clean_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove email headers, URLs, email addresses
+    text = re.sub(r'\S+@\S+', '', text)  # emails
+    text = re.sub(r'http\S+', '', text)  # URLs
+    
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
+    
+    # Keep only letters and spaces (removes punctuation, special chars)
+    text = re.sub(r'[^a-z\s]', '', text)
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+# Clean all documents
+subset_size = 2000 # limite to trim the dataset
+cleaned_docs = [clean_text(doc) for doc in data.data[:subset_size]]
+
+# print("Original:", data.data[:1])
+print("\nCleaned:", cleaned_docs[:1])
+
 # create a vocabulary i.e find all the unique words in the sentences
 vocab = set() 
 
-for sentence in sentences:
+for sentence in cleaned_docs:
     words = sentence.split()
     vocab.update(words)
 
@@ -34,14 +73,14 @@ co_occur = np.zeros((n,n))
 
 
 # define context window size
-window_size = 4     # two words left and right
+window_size = 8     # two words left and right
 
 word_to_idx = {}
 for i, word in enumerate(vocab):
     word_to_idx[word] = i
 
 
-for sentence in sentences:
+for sentence in cleaned_docs:
     words = sentence.split()
     for i,word in enumerate(words):
         word_id  = word_to_idx[word]
@@ -54,11 +93,10 @@ for sentence in sentences:
                 context_id = word_to_idx[words[j]]
                 co_occur[word_id, context_id] += 1
 
-print(word_to_idx)
-print(co_occur[2])
+# print(word_to_idx)
+# print(co_occur[2])
 
-print(co_occur[word_to_idx['the']][word_to_idx['cat']])
-
+print("RESULT: ", co_occur[word_to_idx['car']][word_to_idx['history']])
 
 
 
